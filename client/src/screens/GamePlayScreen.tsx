@@ -1,24 +1,55 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
+import {
+  Image,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import ReactNativeZoomableView from '@openspacelabs/react-native-zoomable-view/src/ReactNativeZoomableView';
+import Line from '../components/Line/Line';
+import BottomMenu from '../components/BottomMenu/BottomMenu';
+import PopUp from '../components/Popup/Popup';
+import RNExitApp from 'react-native-exit-app';
+import {ProgressBar, MD3Colors} from 'react-native-paper';
 
 interface GamePlayScreenProps {
   navigation: any;
-  board: string[][];
+  route: any;
 }
+type firstFunction = () => void;
 
-const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation}) => {
+const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation, route}) => {
+  const {gameData} = route.params;
+  const {waiting} = route.params;
   const [character, setCharacter] = useState<string>('X');
+  const [playerPlaying, setPlayerPlaying] = useState<string>(
+    gameData.players[0].userName,
+  );
+
   const [wasWin, setWasWin] = useState<string>('');
+  const [imageWinner, setImageWinner] = useState<string>('');
   const [draw, setDraw] = useState<boolean>(false);
+  const [showPopup, setShowPopup] = useState<boolean>(false);
+  const [viewingBoard, setViewingBoard] = useState<boolean>(false);
+  const [showImage, setShowImage] = useState<boolean>(false);
   const [pause, setPause] = useState<boolean>(false);
+  const [waitingStatus, setWaitingStatus] = useState<boolean>(waiting);
+  const [message, setMessage] = useState<string>('');
+  const [subMessage, setSubMessage] = useState<string>('');
   const [lastMove, setLastMove] = useState<{row: number; col: number} | null>(
     null,
   );
   const [winPoint, setWinPoint] = useState<Array<[number, number]> | null>(
     null,
   );
+
+  const [firstButton, setFirstButton] = useState<string>('');
+  const [secondButton, setSecondButton] = useState<string>('');
+  const [thirdButton, setThirdButton] = useState<string>('');
 
   const [lastClickedButtonIndex, setLastClickedButtonIndex] = useState<
     number | null
@@ -69,11 +100,8 @@ const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation}) => {
             counterEnemy += 1;
           }
           if (counterEnemy === 2) {
-            console.log('was blocked');
             break;
           } else {
-            console.log(`${player} WIN !`);
-
             setBoarData([...board]);
             setWinPoint(winCoordinates);
             return {player, winCoordinates, type: 'row'};
@@ -113,10 +141,8 @@ const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation}) => {
               counterEnemy += 1;
             }
             if (counterEnemy === 2) {
-              console.log('was blocked');
               break;
             } else {
-              console.log(`${player} WIN !`);
               return {player, winCoordinates, type: 'col'};
             }
           }
@@ -155,10 +181,8 @@ const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation}) => {
               counterEnemy += 1;
             }
             if (counterEnemy === 2) {
-              console.log('was blocked');
               break;
             } else {
-              console.log(`${player} WIN !`);
               return {player, winCoordinates, type: 'diagonal'};
             }
           }
@@ -197,10 +221,8 @@ const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation}) => {
               counterEnemy += 1;
             }
             if (counterEnemy === 2) {
-              console.log('was blocked');
               break;
             } else {
-              console.log(`${player} WIN !`);
               return {player, winCoordinates, type: 'antidiagonal'};
             }
           }
@@ -245,19 +267,15 @@ const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation}) => {
     }
     if (row === boardData.length - 1) {
       updatedBoardData.push(Array(boardData[0].length).fill(''));
-      // row -= 1;
     }
     if (col === boardData[row].length - 1) {
       updatedBoardData.forEach(rowData => rowData.push(''));
-      // col -= 1;
     }
 
     setBoarData(updatedBoardData);
     // checkWinner(updatedBoardData, row, col);
     const winner = checkWinner(updatedBoardData, row, col);
     if (winner) {
-      console.log(winner);
-      console.log(`Player ${winner} wins!`);
       if (winner.winCoordinates !== null) {
         winner.winCoordinates.forEach(([r, c]) => {
           var type = '';
@@ -277,28 +295,83 @@ const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation}) => {
             default:
               break;
           }
-          console.log(`${winner.player}${type}`);
           boardData[r][c] = `${winner.player}${type}`;
         });
+        setPause(true);
+        setWasWin(winner.player);
+        setShowPopup(true);
+        if (winner.player === 'X') {
+          setImageWinner(
+            gameData.players[0]
+              ? gameData.players[0].avatar
+              : 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
+          );
+        } else {
+          setImageWinner(
+            gameData.players[1]
+              ? gameData.players[1].avatar
+              : 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
+          );
+        }
+        setShowImage(true);
+        setMessage(`${playerPlaying} WON THIS GAME`);
+        setSubMessage(
+          `
+          Choose "Show board" to see board again
+          Choose "Restart" to restart this game 
+          Choose "Exit" to close the app`,
+        );
+        setFirstButton('Show Board');
+        setFirstBtnFunction(() => viewBoard);
+        setSecondButton('Restart');
+        setSecondBtnFunction(() => showConFirmPopUpRestart);
+        setThirdButton('Exit');
+        setThirdBtnFunction(() => showConFirmPopUpExit);
       }
       setWasWin(winner.player);
+      if (winner.player === 'X') {
+        setImageWinner(
+          gameData.players[0]
+            ? gameData.players[0].avatar
+            : 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
+        );
+      } else {
+        setImageWinner(
+          gameData.players[1]
+            ? gameData.players[1].avatar
+            : 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
+        );
+      }
     }
-
     setCharacter(character === 'X' ? 'O' : 'X');
+    setPlayerPlaying(
+      playerPlaying === gameData.players[0].userName
+        ? 'newPlayer123'
+        : gameData.players[0].userName,
+    );
     setLastMove({row, col});
     setLastClickedButtonIndex(col + row * boardData[row].length);
   };
-  // useEffect(() => {
-  //   console.log(winPoint);
-  //   if (winPoint !== null) {
-  //     winPoint.forEach(([r, c]) => {
-  //       boardData[r][c] = 'A';
-  //     });
-  //   }
-  // }, [boardData, winPoint]);
-
+  useEffect(() => {
+    if (!pause) {
+      const interval = setInterval(() => {
+        if (timer > 0) {
+          setTimer(prevTimer => prevTimer - 1);
+        } else {
+          setPause(true);
+          handleTimeOut();
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [timer, pause]);
   const resetGame = () => {
     setWasWin('');
+    setImageWinner('');
+    setShowPopup(false);
+    setViewingBoard(false);
+    setFirstButton('');
+    setSecondButton('');
     setWinPoint(null);
     setDraw(false);
     setBoarData([
@@ -318,126 +391,384 @@ const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation}) => {
     setLastMove(null);
     setLastClickedButtonIndex(null);
   };
-
-  // useEffect(() => {
-  //   if (!pause) {
-  //     const interval = setInterval(() => {
-  //       if (timer > 0) {
-  //         setTimer(prevTimer => prevTimer - 1);
-  //       } else {
-  //         handleTimeOut();
-  //       }
-  //     }, 1000);
-  //     return () => clearInterval(interval);
-  //   }
-  // }, [timer]);
-
   const handleTimeOut = () => {
     if (character === 'X') {
       setWasWin('O');
+      setImageWinner(
+        gameData.players[1]
+          ? gameData.players[1].avatar
+          : 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
+      );
       setPause(true);
+      setShowPopup(true);
+      setShowImage(true);
+      setMessage(`${gameData.players[1].userName} WON THIS GAME`);
+      setSubMessage(
+        `
+        Choose "Show board" to see board again
+        Choose "Restart" to restart this game 
+        Choose "Exit" to close the app`,
+      );
+      setFirstButton('Show Board');
+      setFirstBtnFunction(() => viewBoard);
+      setSecondButton('Restart');
+      setSecondBtnFunction(() => showConFirmPopUpRestart);
+      setThirdButton('Exit');
+      setThirdBtnFunction(() => showConFirmPopUpExit);
     } else {
       setWasWin('X');
+      setImageWinner(
+        gameData.players[0]
+          ? gameData.players[0].avatar
+          : 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
+      );
       setPause(true);
+      setShowPopup(true);
+      setShowImage(true);
+      setMessage(`${gameData.players[0].userName} WON THIS GAME`);
+      setSubMessage(
+        `
+        Choose "Show board" to see board again
+        Choose "Restart" to restart this game 
+        Choose "Exit" to close the app`,
+      );
+      setFirstButton('Show Board');
+      setFirstBtnFunction(() => viewBoard);
+      setSecondButton('Restart');
+      setSecondBtnFunction(() => showConFirmPopUpRestart);
+      setThirdButton('Exit');
+      setThirdBtnFunction(() => showConFirmPopUpExit);
     }
   };
+
   const handleDraw = () => {
-    setDraw(true);
     setPause(true);
+    setShowPopup(true);
+    setShowImage(false);
+    setMessage('DRAW !');
+    setSubMessage('');
+    setFirstButton('Show Board');
+    setFirstBtnFunction(() => viewBoard);
+    setSecondButton('Restart');
+    setSecondBtnFunction(() => handleSurrender);
+    setThirdButton('Exit');
+    setThirdBtnFunction(() => showConFirmPopUpExit);
   };
   const handleExit = () => {
     navigation.replace('SplashScreen');
   };
+  const viewBoard = () => {
+    setWasWin('');
+    setViewingBoard(true);
+    setShowPopup(false);
+    setFirstButton('');
+    setSecondButton('');
+    setPause(true);
+  };
+  const exitGame = () => {
+    const updatedGame = {...gameData};
+    updatedGame.players.pop();
+    navigation.navigate('MenuScreen', {gameData: updatedGame});
+  };
+  const showConFirmPopUpRestart = () => {
+    setShowPopup(true);
+    setPause(true);
+    setShowImage(false);
+    setMessage('Do you want to restart this game ?');
+    setSubMessage('');
+    setFirstButton('');
+    setSecondButton('Yes');
+    setSecondBtnFunction(() => resetGame);
+    setThirdButton('No');
+    setThirdBtnFunction(() => backConfirmPopup);
+  };
+  const showConFirmPopUpRestartFromViewBoard = () => {
+    setShowPopup(true);
+    setPause(true);
+    setShowImage(false);
+    setMessage('Do you want to restart this game ?');
+    setSubMessage('');
+    setFirstButton('');
+    setSecondButton('Yes');
+    setSecondBtnFunction(() => resetGame);
+    setThirdButton('No');
+    setThirdBtnFunction(() => () => {
+      setShowPopup(false);
+    });
+  };
+  const showConFirmPopUpExit = () => {
+    setShowPopup(true);
+    setPause(true);
+    setShowImage(false);
+    setSubMessage('');
+    setMessage('Do you want to exit this game ?');
+    setFirstButton('');
+    setSecondButton('Yes');
+    setSecondBtnFunction(() => exitGame);
+    setThirdButton('No');
+    setThirdBtnFunction(() => backConfirmPopup);
+  };
+  const showConFirmPopUpNonExit = () => {
+    setShowPopup(true);
+    setPause(true);
+    setShowImage(false);
+    setSubMessage('');
+    setMessage('Do you want to exit this game ?');
+    setFirstButton('');
+    setSecondButton('Yes');
+    setSecondBtnFunction(() => exitGame);
+    setThirdButton('No');
+    setThirdBtnFunction(() => backToWait);
+  };
+  const showConFirmPopUpExitFromViewBoard = () => {
+    setShowPopup(true);
+    setPause(true);
+    setShowImage(false);
+    setSubMessage('');
+    setMessage('Do you want to exit this game ?');
+    setFirstButton('');
+    setSecondButton('Yes');
+    setSecondBtnFunction(() => exitGame);
+    setThirdButton('No');
+    setThirdBtnFunction(() => () => {
+      setShowPopup(false);
+    });
+  };
+  const backConfirmPopup = () => {
+    setShowPopup(true);
+    setShowImage(true);
+    setMessage(`${playerPlaying} WON THIS GAME`);
+    setSubMessage(
+      `
+      Choose "Show board" to see board again
+      Choose "Restart" to restart this game 
+      Choose "Exit" to close the app`,
+    );
+    setSecondButton('');
+    setThirdButton('');
+    setSecondButton('Restart');
+    setSecondBtnFunction(() => showConFirmPopUpRestart);
+    setFirstButton('Show Board');
+    setFirstBtnFunction(() => viewBoard);
+    setThirdButton('Exit');
+    setThirdBtnFunction(() => showConFirmPopUpExit);
+  };
+  const backConfirmFromNonPopup = () => {
+    setShowPopup(true);
+    setPause(true);
+    setShowImage(false);
+    setMessage('Do you want to restart this game ?');
+    setSubMessage('');
+    setFirstButton('');
+    setSecondButton('Yes');
+    setSecondBtnFunction(() => resetGame);
+    setThirdButton('No');
+    setThirdBtnFunction(() => backToWait);
+  };
+  const handleSurrender = () => {
+    if (character === 'X') {
+      setWasWin('O');
+      setImageWinner(
+        gameData.players[1]
+          ? gameData.players[1].avatar
+          : 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
+      );
+      setPause(true);
+      setShowPopup(true);
+      setShowImage(true);
+      setMessage(`${playerPlaying} WON THIS GAME`);
+      setSubMessage(
+        `
+        Choose "Show board" to see board again
+        Choose "Restart" to restart this game 
+        Choose "Exit" to close the app`,
+      );
+      setFirstButton('Show Board');
+      setFirstBtnFunction(() => viewBoard);
+      setSecondButton('Restart');
+      setSecondBtnFunction(() => showConFirmPopUpRestart);
+      setThirdButton('Exit');
+      setThirdBtnFunction(() => showConFirmPopUpExit);
+    } else {
+      setWasWin('X');
+      setImageWinner(
+        gameData.players[0]
+          ? gameData.players[0].avatar
+          : 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
+      );
+      setPause(true);
+      setShowPopup(true);
+      setShowImage(true);
+      setMessage(`${playerPlaying} WON THIS GAME`);
+      setSubMessage(
+        `
+        Choose "Show board" to see board again
+        Choose "Restart" to restart this game 
+        Choose "Exit" to close the app`,
+      );
+      setFirstButton('Show Board');
+      setFirstBtnFunction(() => viewBoard);
+      setSecondButton('Restart');
+      setSecondBtnFunction(() => showConFirmPopUpRestart);
+      setThirdButton('Exit');
+      setThirdBtnFunction(() => showConFirmPopUpExit);
+    }
+  };
+  const showConFirmSurrender = () => {
+    setShowPopup(true);
+    setPause(true);
+    setShowImage(false);
+    setMessage('Do you want to surrender this game ?');
+    setSubMessage('');
+    setFirstButton('');
+    setSecondButton('Yes');
+    setSecondBtnFunction(() => handleSurrender);
+    setThirdButton('No');
+    setThirdBtnFunction(() => () => {
+      setPause(false);
+      setShowPopup(false);
+    });
+  };
+  const showConFirmhandleDraw = () => {
+    setShowPopup(true);
+    setPause(true);
+    setShowImage(false);
+    setMessage('Do you want to draw this game ?');
+    setSubMessage('');
+    setFirstButton('');
+    setSecondButton('Yes');
+    setSecondBtnFunction(() => handleDraw);
+    setThirdButton('No');
+    setThirdBtnFunction(() => () => {
+      setPause(false);
+      setShowPopup(false);
+    });
+  };
+  const backToWait = () => {
+    setPause(true);
+    setShowPopup(true);
+    setMessage('Please wait another people..');
+    setFirstButton('');
+    setSecondButton('');
+    setThirdButton('Exit');
+    setThirdBtnFunction(() => showConFirmPopUpNonExit);
+    setWaitingStatus(false);
+  };
+
+  const [firstBtnFunction, setFirstBtnFunction] = useState(() => () => {});
+  const [secondBtnFunction, setSecondBtnFunction] = useState(() => () => {});
+  const [thirdBtnFunction, setThirdBtnFunction] = useState(() => () => {});
+  if (waitingStatus) {
+    setPause(true);
+    setShowPopup(true);
+    setMessage('Please wait another people..');
+    setThirdButton('Exit');
+    setThirdBtnFunction(() => showConFirmPopUpNonExit);
+    setWaitingStatus(false);
+  }
 
   return (
-    <View className="h-full w-full py-[110px] flex">
-      <View className=" absolute top-[20px] left-0 h-[70px] w-full justify-center">
-        <View className="grid grid-cols-3 flex-row justify-center">
-          <View
-            className={`${
-              character === 'X' ? 'border-b-[#ea3b2e] border-b-[2px]' : ''
-            }`}>
-            <Image
-              className={'w-[40px] h-[40px]  m-[10px] '}
-              source={require('../assets/user.png')}
-            />
-            <Text className="text-center font-bold">User 1</Text>
-          </View>
-          <View className="mt-[20px] w-[200px]">
-            <View className="flex justify-center items-center">
-              <Image
-                className={'w-[40px] h-[40px] '}
-                source={require('../assets/time.png')}
+    <View className="h-full w-full flex">
+      <Image
+        className={'w-full h-full absolute z-[-1]'}
+        source={require('../assets/bgblue.png')}
+      />
+      {/* User Area */}
+      <SafeAreaView>
+        <View className="mt-[40px] left-0 w-full justify-center bg-opacity-60 rounded-b-[20px]">
+          <View className="flex flex-row w-full">
+            <View className="absolute left-[10px] top-0">
+              <View className="flex flex-row left-[20px] absolute z-[1] -top-[20px] items-center">
+                <Image
+                  className={'w-[35px] h-[35px] rounded-full m-[5px]'}
+                  source={{
+                    uri:
+                      gameData.players[0] !== undefined
+                        ? gameData.players[0].avatar
+                        : 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/avatars/db/dbfe400f0dd0ebd938582244a04f85e42a12ca39_full.jpg',
+                  }}
+                />
+                <Text
+                  className="text-center font-black text-[18px] text-black truncate w-[90px] line-clamp-1"
+                  numberOfLines={1}>
+                  {gameData.players[0] !== undefined
+                    ? gameData.players[0].userName
+                    : 'unknowUser'}
+                </Text>
+              </View>
+            </View>
+            <View
+              className={`w-[35%] h-[20px] absolute top-[25px] left-[32px] ${
+                character === 'X' ? '' : 'hidden'
+              }`}>
+              <ProgressBar
+                className="h-[7px] border-white border-[1px]"
+                progress={timer / 10}
+                theme={{colors: {primary: '#F92464'}}}
               />
-              <Text
-                className={`text-[23px] font-bold px-[85px] text-center ${
-                  timer < 6 ? 'text-[#ea3b2e]' : 'text-[#d2c344]'
-                }`}>
-                {timer}
-              </Text>
+            </View>
+            <View className="w-full px-[10px] absolute -top-[40px] z-[-1] flex justify-center">
+              <View className="flex justify-center items-center object-contain">
+                <Image
+                  className={'w-full h-[80px] px-[10px]'}
+                  source={require('../assets/vs2.png')}
+                />
+              </View>
+            </View>
+
+            <View
+              className={
+                'flex flex-row absolute z-[1] right-[20px] -top-[20px] items-center'
+              }>
+              {gameData.players[1] !== undefined && (
+                <Text
+                  className="text-center font-black text-[18px] text-black w-[90px] line-clamp-1"
+                  numberOfLines={1}>
+                  {gameData.players[1] !== undefined
+                    ? gameData.players[1].userName
+                    : 'unknowUser'}
+                </Text>
+              )}
+              {gameData.players[1] !== undefined && (
+                <Image
+                  className={'w-[35px] h-[35px] rounded-full m-[5px] ml-[10px]'}
+                  source={{
+                    uri:
+                      gameData.players[1] !== undefined
+                        ? gameData.players[1].avatar
+                        : 'https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/avatars/db/dbfe400f0dd0ebd938582244a04f85e42a12ca39_full.jpg',
+                  }}
+                />
+              )}
+            </View>
+            <View
+              className={`w-[35%] absolute top-[25px] right-[33px] 
+            ${character === 'O' ? '' : 'hidden'}`}>
+              <ProgressBar
+                className="h-[7px] border-white border-[1px]"
+                progress={timer / 10}
+                theme={{colors: {primary: '#28205A'}}}
+              />
             </View>
           </View>
-          <View
-            className={`${
-              character === 'O' ? 'border-b-[#3892b8] border-b-[2px]' : ''
-            }`}>
-            <Image
-              className="w-[40px] h-[40px] m-[10px]"
-              source={require('../assets/user.png')}
-            />
-            <Text className="text-center font-bold">User 2</Text>
-          </View>
         </View>
-      </View>
-      <View className={`${wasWin === '' ? 'hidden' : ''}`}>
-        <View
-          className={`absolute w-[500px] h-[1200px] -top-[160px] bg-black opacity-30 ${
-            wasWin === '' ? 'hidden' : ''
-          }`}
-        />
-        <View className="absolute rounded-[10px] right-[20px] left-[20px] top-[150px] h-[200px] bg-gray-700">
-          <View className="m-auto flex flex-row">
-            <Text
-              className={`text-white font-bold text-[35px] ${
-                wasWin === 'X' ? 'text-[#e92020c3]' : 'text-[#3892b8]'
-              }`}>
-              {wasWin}
-            </Text>
-            <Text className="ml-[5px] text-white font-bold text-[35px]">
-              win this game!
-            </Text>
-          </View>
-          <View className="flex flex-row">
-            <TouchableOpacity
-              className="rounded-[15px] bg-white mx-auto mb-[20px]"
-              onPress={() => resetGame()}>
-              <Text className="m-auto text-black mx-[10px] p-[20px] text-[20px]">
-                Restart
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-      <View className={`${draw ? '' : 'hidden'}`}>
-        <View className="absolute w-[500px] h-[1200px] -top-[160px] bg-black opacity-30" />
-        <View className="absolute rounded-[10px] right-[20px] left-[20px] top-[150px] h-[200px] bg-gray-700">
-          <View className="m-auto flex flex-row">
-            <Text className="ml-[5px] text-white font-bold text-[35px]">
-              Draw!
-            </Text>
-          </View>
-          <View className="flex flex-row">
-            <TouchableOpacity
-              className="rounded-[15px] bg-white mx-auto mb-[20px]"
-              onPress={() => resetGame()}>
-              <Text className="m-auto text-black mx-[10px] p-[20px] text-[20px]">
-                Restart
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-      <View className="bg-gray-400 h-full w-full z-[-1]">
+      </SafeAreaView>
+      {/* End User Area */}
+      <PopUp
+        wasWin={wasWin}
+        firstBtnFunction={firstBtnFunction}
+        secondBtnFunction={secondBtnFunction}
+        thirdBtnFunction={thirdBtnFunction}
+        firstButton={firstButton}
+        secondButton={secondButton}
+        thirdButton={thirdButton}
+        message={message}
+        subMessage={subMessage}
+        showImage={showImage}
+        show={showPopup}
+        imageWinner={imageWinner}
+      />
+      <View className="h-full w-full z-[-1] absolute top-[30px]">
         <ReactNativeZoomableView
           zoomEnabled={wasWin !== '' ? false : true}
           maxZoom={1.5}
@@ -455,131 +786,58 @@ const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation}) => {
               {row.map((cell, cellIndex) => (
                 <TouchableOpacity
                   key={cellIndex}
-                  disabled={wasWin !== '' ? true : false}
+                  disabled={pause}
                   onPress={() => go(cellIndex, rowIndex)}>
-                  <View
-                    className={`${
-                      lastClickedButtonIndex ===
-                      cellIndex + rowIndex * boardData[0].length
-                        ? 'border-[#3892b8] border-[2px] bg-white'
-                        : 'bg-white'
-                    }
-                      ${!cell.indexOf('X') ? 'border-[#e92020c3]' : ''}
-                      ${
-                        !cell.indexOf('O') ? 'border-[#3892b8]' : ''
-                      }  w-[60px] h-[60px] m-[2px] `}>
-                    <View
-                      className={`absolute w-full h-full opacity-25 ${
-                        !cell.indexOf('X') ? 'bg-[#e92020c3]' : ''
-                      }
-                      ${!cell.indexOf('O') ? 'bg-[#3892b8]' : ''}`}
-                    />
-                    {cell.indexOf('r') !== -1 && (
-                      <View
-                        className={`
-                          ${
-                            lastClickedButtonIndex ===
-                            cellIndex + rowIndex * boardData[0].length
-                              ? 'bottom-[28px] bg-white'
-                              : 'bottom-[30px] '
-                          }
-                          bg-red-500 h-[5px] w-[65px] absolute 
-                        `}
-                      />
-                    )}
-                    {cell.indexOf('c') !== -1 && (
-                      <View
-                        className={`
-                          ${
-                            lastClickedButtonIndex ===
-                            cellIndex + rowIndex * boardData[0].length
-                              ? 'right-[26px]'
-                              : 'right-[28px]'
-                          }
-                          bg-red-500 w-[5px] h-[60000
-                            5px] absolute z-[100]
-                        `}
-                      />
-                    )}
-                    {cell.indexOf('d') !== -1 && (
-                      <View
-                        className={`
-                          ${
-                            lastClickedButtonIndex ===
-                            cellIndex + rowIndex * boardData[0].length
-                              ? 'top-[-17px]'
-                              : 'top-[-15px]'
-                          }
-                          bg-red-500 w-[5px] h-[95px] left-[30px] absolute z-[100] -rotate-45
-                        `}
-                      />
-                    )}
-                    {cell.indexOf('a') !== -1 && (
-                      <View
-                        className={`
-                          ${
-                            lastClickedButtonIndex ===
-                            cellIndex + rowIndex * boardData[0].length
-                              ? 'top-[-22px]'
-                              : 'top-[-20px]'
-                          }
-                          bg-red-500 w-[5px] h-[95px] left-[30px] absolute z-[100] rotate-45
-                        `}
-                      />
-                    )}
-                    <Text
-                      className={`m-auto font-bold text-[29px] ${
-                        !cell.indexOf('X')
-                          ? 'text-[#e92020c3]'
-                          : 'text-[#3892b8]'
-                      }`}>
-                      {!cell.indexOf('X') ? 'X' : ''}
-                      {!cell.indexOf('O') ? 'O' : ''}
-                    </Text>
-                  </View>
+                  <Line
+                    cell={cell}
+                    lastClickedButtonIndex={lastClickedButtonIndex}
+                    cellIndex={cellIndex}
+                    rowIndex={rowIndex}
+                    boardData={boardData}
+                  />
                 </TouchableOpacity>
               ))}
             </View>
           ))}
         </ReactNativeZoomableView>
       </View>
-      <View className="w-full items-center justify-center px-[20px]">
-        <View className="h-[80px] mt-[10px] px-[20px] w-full justify-center p-[15px] bg-blue-300 rounded-[20px] flex flex-row">
-          <TouchableOpacity
-            onPress={() => handleTimeOut()}
-            className="w-[33%] flex flex-col items-center">
-            <Image
-              className={'w-[30px] h-[30px]'}
-              source={require('../assets/suspended.png')}
-            />
-            <Text className="text-center text-white font-bold p-[5px]">
-              Surrender
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleDraw()}
-            className="w-[33%] flex flex-col items-center">
-            <Image
-              className={'w-[30px] h-[30px]'}
-              source={require('../assets/draw.png')}
-            />
-            <Text className="text-center text-white font-bold p-[5px]">
-              Draw
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => handleExit()}
-            className="w-[33%] flex flex-col items-center">
-            <Image
-              className={'w-[30px] h-[30px]'}
-              source={require('../assets/out.png')}
-            />
-            <Text className="text-center text-white font-bold p-[5px]">
-              Out
-            </Text>
-          </TouchableOpacity>
+      <BottomMenu
+        pause={pause}
+        showConFirmSurrender={showConFirmSurrender}
+        showConFirmhandleDraw={showConFirmhandleDraw}
+        showConFirmPopUpExit={showConFirmPopUpExit}
+      />
+      {viewingBoard && (
+        <View
+          className={
+            'w-full items-center justify-center px-[20px] absolute bottom-[30px]'
+          }>
+          <View className="h-[80px] mt-[10px] px-[20px] w-full justify-center p-[15px] bg-[#6c3af3] border-[#ecc200] border-[2px] rounded-[20px] flex flex-row">
+            <TouchableOpacity
+              onPress={() => showConFirmPopUpRestartFromViewBoard()}
+              className="w-[33%] flex flex-col items-center">
+              <Image
+                className={'w-[30px] h-[30px]'}
+                source={require('../assets/restart.png')}
+              />
+              <Text className="text-center text-white font-bold p-[5px]">
+                Restart
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => showConFirmPopUpExitFromViewBoard()}
+              className="w-[33%] flex flex-col items-center">
+              <Image
+                className={'w-[30px] h-[30px]'}
+                source={require('../assets/out.png')}
+              />
+              <Text className="text-center text-white font-bold p-[5px]">
+                Out
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      )}
     </View>
   );
 };
