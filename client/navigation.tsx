@@ -16,6 +16,7 @@ const NavigationStack: React.FC = () => {
         initialRouteName="SplashScreen"
         screenOptions={{
           headerShown: false,
+          gestureEnabled: false,
         }}>
         <Stack.Screen name="SplashScreen" component={SplashScreen} />
         <Stack.Screen name="SignInScreen" component={SignInScreen} />

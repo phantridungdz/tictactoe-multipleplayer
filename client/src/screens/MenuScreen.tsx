@@ -29,6 +29,7 @@ const MenuScreen: React.FC<MenuScreenProps> = ({navigation}) => {
   const [isShowAccept, setIsShowAccept] = useState<boolean>(false);
   const [statusPlaying, setStatusPlaying] = useState<boolean>(false);
   const [statusWaiting, setStatusWaiting] = useState<boolean>(false);
+  const [isPrivate, setIsPrivate] = useState<boolean>(false);
   const scrollViewRef = useRef(null);
   const [searchText, setSearchText] = useState('');
   const [passwordText, setPasswordText] = useState('');
@@ -351,14 +352,32 @@ const MenuScreen: React.FC<MenuScreenProps> = ({navigation}) => {
               <TextInput
                 placeholder="Enter game name"
                 secureTextEntry={false}
-                autoComplete="cc-number"
                 maxLength={23}
+                keyboardType="default"
                 placeholderTextColor={'gray'}
                 className="h-[40px] border-[1px] rounded-[5px] border-gray-300 w-[230px] mt-[10px] px-[20px]"
                 value={gameNameCreateText}
                 onChangeText={handleGameNameCreateChange}
               />
-              <Text className="text-left text-[17px] mt-[20px]">Password</Text>
+              <View className="flex flex-row items-center pt-[20px]">
+                <CheckBox
+                  lineWidth={2}
+                  boxType={'square'}
+                  disabled={false}
+                  tintColor={'#000'}
+                  onCheckColor={'#000'}
+                  onTintColor={'#000'}
+                  animationDuration={0.1}
+                  offAnimationType={'fade'}
+                  onAnimationType={'fade'}
+                  value={isPrivate}
+                  onValueChange={newValue => {
+                    setIsPrivate(newValue);
+                  }}
+                />
+                <Text className="pl-[10px] text-[18px]">Private</Text>
+              </View>
+              {/* <Text className="text-left text-[17px] mt-[20px]">Password</Text>
               <TextInput
                 placeholder="Enter game password"
                 secureTextEntry={false}
@@ -369,7 +388,7 @@ const MenuScreen: React.FC<MenuScreenProps> = ({navigation}) => {
                 value={passwordCreateText}
                 keyboardType="numeric"
                 onChangeText={handlePasswordCreateChange}
-              />
+              /> */}
               <View className="flex flex-row justify-center pt-[20px] gap-[20px]">
                 <TouchableOpacity
                   onPress={() => closeCreateGame()}
@@ -399,12 +418,12 @@ const MenuScreen: React.FC<MenuScreenProps> = ({navigation}) => {
                   onChangeText={handleSearch}
                   value={searchText}
                 />
-                <TouchableOpacity onPress={() => setIsShowPopup(true)}>
+                {/* <TouchableOpacity onPress={() => setIsShowPopup(true)}>
                   <Image
                     className="object-contain w-[30px] h-[30px] mr-[15px]"
                     source={require('../assets/filter.png')}
                   />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
             </SafeAreaView>
           </View>
@@ -417,86 +436,108 @@ const MenuScreen: React.FC<MenuScreenProps> = ({navigation}) => {
               className={'w-full h-full absolute z-[-1]'}
               source={require('../assets/bgblue.png')}
             /> */}
-            {searchResults.map((gameData, index) => (
-              <TouchableOpacity
-                activeOpacity={100}
-                key={index}
-                className={`border-b-[0.5px] border-gray-300 ${
-                  gameData.status === 'Playing' ? 'bg-gray-200' : 'bg-white'
-                }`}>
-                <View className="flex flex-2 flex-row pt-[20px] pb-[10px] items-center px-[20px] ">
-                  {gameData.players.map((player, index) => (
-                    <View
-                      key={index}
-                      className="flex flex-1 flex-row items-center">
-                      {index === 1 && <Text className="pr-[30px]">vs</Text>}
-                      {player.avatar ? (
-                        <Image
-                          source={{
-                            uri:
-                              player.avatar !== ''
-                                ? player.avatar
-                                : 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
-                          }}
-                          className="w-[30px] h-[30px] rounded-full mr-[10px]"
-                        />
-                      ) : (
-                        <Image
-                          source={{
-                            uri: 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
-                          }}
-                          className="w-[30px] h-[30px] rounded-full mr-[10px]"
-                        />
-                      )}
-                      <Text className="font-bold text-[13px] mr-[10px]">
-                        {player.userName}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-                <View
+            {searchResults
+              .filter(gameData => gameData.status !== 'Playing')
+              .map((gameData, index) => (
+                <TouchableOpacity
+                  activeOpacity={100}
                   key={index}
-                  className="px-[20px] pb-[20px] flex flex-row border-b-[0.5px] border-gray-300 ">
-                  <View className="flex flex-col mt-[5px]">
-                    <Text>{gameData.gameName}</Text>
-                    <View className="flex flex-row py-[10px] items-center">
+                  className={`border-b-[0.5px] border-gray-300 ${
+                    gameData.status === 'Playing' ? 'bg-gray-200' : 'bg-white'
+                  }`}>
+                  <View className="flex flex-2 flex-row pt-[20px] pb-[10px] items-center px-[20px] ">
+                    {gameData.players.map((player, index) => (
                       <View
-                        className={`w-[10px] h-[10px] rounded-full ${
-                          gameData.status === 'Playing'
-                            ? 'bg-red-500'
-                            : 'bg-[#34eb58]'
-                        }`}
-                      />
-                      <Text className="pl-[10px]">{gameData.status}</Text>
+                        key={index}
+                        className="flex flex-1 flex-row items-center bg-[#6c3af3] border-[#ecc200] border-[2px] p-[10px] rounded-l-full rounded-r-[10px]">
+                        {index === 1 && <Text className="pr-[30px]">vs</Text>}
+                        {player.avatar ? (
+                          <Image
+                            source={{
+                              uri:
+                                player.avatar !== ''
+                                  ? player.avatar
+                                  : 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
+                            }}
+                            className="w-[40px] h-[40px] rounded-full mr-[10px] border-[#ecc200] border-[2px]"
+                          />
+                        ) : (
+                          <Image
+                            source={{
+                              uri: 'https://i1.sndcdn.com/avatars-000437232558-yuo0mv-t500x500.jpg',
+                            }}
+                            className="w-[30px] h-[30px] rounded-full mr-[10px]"
+                          />
+                        )}
+                        <View className="flex flex-col">
+                          <Text className="font-bold text-[13px] mr-[10px] uppercase text-white">
+                            {player.userName}
+                          </Text>
+                          <View className="flex flex-row">
+                            <Text className="font-normal text-[13px] mr-[10px] mt-[5px] text-white">
+                              Won Games:{' '}
+                              <Text className="font-bold">
+                                {player?.wonGames}
+                              </Text>
+                            </Text>
+                            <Text className="font-normal text-[13px] mr-[10px] mt-[5px] text-white">
+                              Least Turn To Win:{' '}
+                              <Text className="font-bold">
+                                {player?.wonGames}
+                              </Text>
+                            </Text>
+                          </View>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                  <View
+                    key={index}
+                    className="px-[20px] pb-[20px] flex flex-row border-b-[0.5px] border-gray-300 ">
+                    <View className="flex flex-col mt-[5px]">
+                      <Text className="font-bold text-[18px]">
+                        {gameData.gameName}
+                      </Text>
+                      <View className="flex flex-row py-[10px] items-center">
+                        <View
+                          className={`w-[10px] h-[10px] rounded-full ${
+                            gameData.status === 'Playing'
+                              ? 'bg-red-500'
+                              : 'bg-[#34eb58]'
+                          }`}
+                        />
+                        <Text className="pl-[10px]">{gameData.status}</Text>
+                      </View>
+                    </View>
+                    <View className=" flex-1 mr-[20px] h-full flex flex-row justify-end items-center">
+                      <TouchableOpacity
+                        onPress={() =>
+                          gameData.private
+                            ? handleJoinWithPass(gameData)
+                            : handleJoinGame(gameData)
+                        }
+                        disabled={gameData.status === 'Playing'}
+                        className={`border-[2px] bg-[#6c3af3] border-[#ecc200] w-[150px] rounded-[8px] h-[40px] flex flex-row justify-center items-center
+                      ${gameData.status === 'Playing' ? 'bg-[#7867a5]' : ''}`}>
+                        {/* {gameData.auth && (
+                          <Image
+                            source={require('../assets/lock.png')}
+                            className="w-[20px] h-[20px] absolute left-[10px]"
+                          />
+                        )} */}
+                        <Text
+                          className={`absolute text-center font-bold text-white ${
+                            gameData.status === 'Playing'
+                              ? 'text-[#bcb2d6]'
+                              : ''
+                          }`}>
+                          Join Now
+                        </Text>
+                      </TouchableOpacity>
                     </View>
                   </View>
-                  <View className=" flex-1 mr-[20px] h-full flex flex-row justify-end items-center">
-                    <TouchableOpacity
-                      onPress={() =>
-                        gameData.auth
-                          ? handleJoinWithPass(gameData)
-                          : handleJoinGame(gameData)
-                      }
-                      disabled={gameData.status === 'Playing'}
-                      className={`border-[2px] bg-[#6c3af3] border-[#ecc200] w-[100px] rounded-[8px] h-[40px] flex flex-row justify-center items-center
-                      ${gameData.status === 'Playing' ? 'bg-[#7867a5]' : ''}`}>
-                      {gameData.auth && (
-                        <Image
-                          source={require('../assets/lock.png')}
-                          className="w-[20px] h-[20px] absolute left-[10px]"
-                        />
-                      )}
-                      <Text
-                        className={`absolute text-center font-bold text-white ${
-                          gameData.status === 'Playing' ? 'text-[#bcb2d6]' : ''
-                        }`}>
-                        Join
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </TouchableOpacity>
-            ))}
+                </TouchableOpacity>
+              ))}
           </ScrollView>
           <View className="px-[20px] rounded-[10px] border-t-[0.7px] border-gray-400">
             <TouchableOpacity

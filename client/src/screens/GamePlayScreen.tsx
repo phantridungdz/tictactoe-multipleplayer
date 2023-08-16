@@ -649,7 +649,7 @@ const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation, route}) => {
     setShowPopup(true);
     setMessage('Please wait another people..');
     setFirstButton('');
-    setSecondButton('');
+    setSecondButton('Invite friend');
     setThirdButton('Exit');
     setThirdBtnFunction(() => showConFirmPopUpNonExit);
     setWaitingStatus(false);
@@ -662,6 +662,7 @@ const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation, route}) => {
     setPause(true);
     setShowPopup(true);
     setMessage('Please wait another people..');
+    setSecondButton('Invite friend');
     setThirdButton('Exit');
     setThirdBtnFunction(() => showConFirmPopUpNonExit);
     setWaitingStatus(false);
