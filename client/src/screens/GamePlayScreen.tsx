@@ -15,6 +15,7 @@ import BottomMenu from '../components/BottomMenu/BottomMenu';
 import PopUp from '../components/Popup/Popup';
 import RNExitApp from 'react-native-exit-app';
 import {ProgressBar, MD3Colors} from 'react-native-paper';
+import Sound from 'react-native-sound';
 
 interface GamePlayScreenProps {
   navigation: any;
@@ -23,6 +24,44 @@ interface GamePlayScreenProps {
 type firstFunction = () => void;
 
 const GamePlayScreen: React.FC<GamePlayScreenProps> = ({navigation, route}) => {
+  const [sound, setSound] = useState<Sound | null>(null);
+
+  useEffect(() => {
+    Sound.setCategory('Playback');
+    const newSound = new Sound(
+      'win.mp3',
+      Sound.MAIN_BUNDLE,
+      error => {
+        if (error) {
+          console.log('Error loading sound: ', error);
+        } else {
+          setSound(newSound);
+        }
+      },
+    );
+
+    // Clean up the sound instance when the component unmounts
+    return () => {
+      if (sound) {
+        sound.release();
+      }
+    };
+  }, []);
+
+  const playSound = () => {
+    if (sound) {
+      sound.play(success => {
+        if (success) {
+          console.log('Sound played successfully');
+        } else {
+          console.log('Playback failed');
+        }
+      });
+    }
+  };
+
+  playSound();
+
   const {gameData} = route.params;
   const {waiting} = route.params;
   const [character, setCharacter] = useState<string>('X');

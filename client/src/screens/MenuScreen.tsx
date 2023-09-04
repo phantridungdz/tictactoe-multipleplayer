@@ -155,11 +155,7 @@ const MenuScreen: React.FC<MenuScreenProps> = ({navigation}) => {
     setIsShowAccept(true);
     setGameWantJoin(game);
   };
-  // const handlePassword = (game: any) => {
-  //   setIsShowAccept(true);
-  //   setGameWantJoin(game);
-  // };
-  console.log(gameDataState);
+
   const goToGame = () => {
     setIsShowAccept(false);
     const updatedGame = {...gameWantJoin};
@@ -473,15 +469,16 @@ const MenuScreen: React.FC<MenuScreenProps> = ({navigation}) => {
                           <Text className="font-bold text-[13px] mr-[10px] uppercase text-white">
                             {player.userName}
                           </Text>
-                          <View className="flex flex-row">
-                            <Text className="font-normal text-[13px] mr-[10px] mt-[5px] text-white">
-                              Won Games:{' '}
-                              <Text className="font-bold">
-                                {player?.wonGames}
-                              </Text>
+                          <View className="flex flex-row mt-[5px] items-center justify-center">
+                            <Image
+                              source={require('../assets/trophy.png')}
+                              className="w-[20px] h-[20px]"
+                            />
+                            <Text className="font-bold text-[13px] text-white ml-[5px]">
+                              {player?.wonGames}
                             </Text>
-                            <Text className="font-normal text-[13px] mr-[10px] mt-[5px] text-white">
-                              Least Turn To Win:{' '}
+                            <Text className="font-normal text-[13px] ml-[10px] mt-[5px] text-white">
+                              Least Moves To Win:{' '}
                               <Text className="font-bold">
                                 {player?.wonGames}
                               </Text>

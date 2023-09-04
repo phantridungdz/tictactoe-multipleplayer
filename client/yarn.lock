@@ -5885,6 +5885,11 @@ react-native-snap-area@^0.1.1:
   resolved "https://registry.yarnpkg.com/react-native-snap-area/-/react-native-snap-area-0.1.1.tgz#cc23ef82c59fbfedf59fe19f316961cf85fd7291"
   integrity sha512-03Pxbl9iwwIQV+lU7hiCpvjkiIZpAjpINTBvSKZclR2I0LVv0dPJMHTUv9HCmxQ/L2wfNUeYLuQRxlDOBP6gXw==
 
+react-native-sound@^0.11.2:
+  version "0.11.2"
+  resolved "https://registry.yarnpkg.com/react-native-sound/-/react-native-sound-0.11.2.tgz#e542dc5b9e16ab4b3ac7e6eaddb1fc8d98da9038"
+  integrity sha512-LmGc8lgOK3qecYMVQpyHvww/C+wgT6sWeMpVbOe4NCRGC2yKd4fo4U0KBUo9PO7AqKESO3I/2GZg1/C0+bwiiA==
+
 react-native-vector-icons@^10.0.0:
   version "10.0.0"
   resolved "https://registry.yarnpkg.com/react-native-vector-icons/-/react-native-vector-icons-10.0.0.tgz#0f031f7717f76f0a397f725de9b5a47ec87862e9"
